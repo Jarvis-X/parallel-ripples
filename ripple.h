@@ -8,11 +8,11 @@
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <random>
 
-#define ROW 1080
-#define COL 1920
+#define ROW 1600
+#define COL 2560
 #define DEPTH 3
-
 
 constexpr auto MAX_SOURCE_SIZE = (0x10000000);
 constexpr auto NUM_WORK_GROUP = (32);
@@ -25,3 +25,9 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 void output_msg_and_shut(int err, const char* msg);
 
 void update_buffer(float* &image_buffer, float* &image_buffer1);
+
+void generate_raindrops(float*& image_buffer1,  
+	std::uniform_int_distribution<int>& pos_uni, 
+	std::uniform_real_distribution<float>& amp_uni,
+	std::default_random_engine& random_pos_eng,
+	std::default_random_engine& random_amp_eng);

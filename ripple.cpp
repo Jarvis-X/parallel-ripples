@@ -162,3 +162,17 @@ void update_buffer(float* &image_buffer, float* &image_buffer1) {
     image_buffer1 = image_buffer;
     image_buffer = temp;
 }
+
+void generate_raindrops(float*& image_buffer1, 
+    uniform_int_distribution<int> &pos_uni,
+    uniform_real_distribution<float> &amp_uni,
+    default_random_engine &random_pos_eng,
+    default_random_engine &random_amp_eng) {
+    for (auto i = 0; i < 1; i++) {
+        int index = pos_uni(random_pos_eng);
+        for (auto channel = 0; channel < DEPTH; channel++) {
+            float amp = amp_uni(random_amp_eng);
+            image_buffer1[index * DEPTH + channel] = image_buffer1[index * DEPTH + channel] + amp;
+        }
+    }
+}
