@@ -78,7 +78,7 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 
 void output_msg_and_shut(int err, const char* msg) {
 	if (err < 0) {
-		cerr << msg << endl;
+		cerr << msg << ": " << err << endl;
 		exit(1);
 	};
 }
@@ -168,11 +168,51 @@ void generate_raindrops(float*& image_buffer1,
     uniform_real_distribution<float> &amp_uni,
     default_random_engine &random_pos_eng,
     default_random_engine &random_amp_eng) {
-    for (auto i = 0; i < 1; i++) {
+    for (auto i = 0; i < 100; i++) {
         int index = pos_uni(random_pos_eng);
         for (auto channel = 0; channel < DEPTH; channel++) {
             float amp = amp_uni(random_amp_eng);
             image_buffer1[index * DEPTH + channel] = image_buffer1[index * DEPTH + channel] + amp;
         }
     }
+}
+
+void update_buffer_cl(float*& image_buffer, float*& image_buffer1,
+	size_t &global_size, size_t &local_size,
+	cl_context context, cl_command_queue queue, cl_kernel update_buffer_kernel, cl_int err) {
+
+	cl_mem cl_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR,
+		ROW * COL * DEPTH * sizeof(float), image_buffer, &err);
+	output_msg_and_shut(err, "Couldn't create image buffer");
+
+	cl_mem cl_buffer1 = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR,
+		ROW * COL * DEPTH * sizeof(float), image_buffer1, &err);
+	output_msg_and_shut(err, "Couldn't create image buffer1");
+
+	// err = clEnqueueWriteBuffer(queue, cl_buffer, CL_TRUE, 0,
+	//	ROW * COL * DEPTH * sizeof(float), image_buffer, 0, NULL, NULL);
+	// err |= clEnqueueWriteBuffer(queue, cl_buffer1, CL_TRUE, 0,
+	// 	ROW * COL * DEPTH * sizeof(float), image_buffer1, 0, NULL, NULL);
+
+	/* Create arguments for associate_centers kernel */
+	err = clSetKernelArg(update_buffer_kernel, 0, sizeof(cl_mem), &cl_buffer);
+	err |= clSetKernelArg(update_buffer_kernel, 1, sizeof(cl_mem), &cl_buffer1);
+	output_msg_and_shut(err, "Couldn't set an argument for the [update_buffer_kernel] kernel");
+
+	err = clEnqueueNDRangeKernel(queue, update_buffer_kernel, 1, NULL, &global_size, &local_size,
+		0, NULL, NULL);
+	output_msg_and_shut(err, "Couldn't enqueue the [update_buffer_kernel] kernel");
+
+	// Wait for the command queue
+	clFinish(queue);
+
+	// read from device buffer
+	clEnqueueReadBuffer(queue, cl_buffer, CL_TRUE, 0, ROW*COL*DEPTH * sizeof(float), image_buffer, 0, NULL, NULL);
+
+	clReleaseMemObject(cl_buffer);
+	clReleaseMemObject(cl_buffer1);
+	
+	float* temp = image_buffer1;
+	image_buffer1 = image_buffer;
+	image_buffer = temp;
 }

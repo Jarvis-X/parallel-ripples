@@ -10,12 +10,11 @@
 #include <fstream>
 #include <random>
 
-#define ROW 1600
-#define COL 2560
-#define DEPTH 3
-
-constexpr auto MAX_SOURCE_SIZE = (0x10000000);
-constexpr auto NUM_WORK_GROUP = (32);
+constexpr auto ROW = 2160;
+constexpr auto COL = 3840;
+constexpr auto DEPTH = 3;
+constexpr auto MAX_SOURCE_SIZE = (0x1000000);
+constexpr auto NUM_WORK_GROUP = (21600);
 
 cl_device_id create_device();
 
@@ -31,3 +30,7 @@ void generate_raindrops(float*& image_buffer1,
 	std::uniform_real_distribution<float>& amp_uni,
 	std::default_random_engine& random_pos_eng,
 	std::default_random_engine& random_amp_eng);
+
+void update_buffer_cl(float*& image_buffer, float*& image_buffer1, 
+	size_t& global_size, size_t &local_size,
+	cl_context context, cl_command_queue queue, cl_kernel update_buffer_kernel, cl_int err);
