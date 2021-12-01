@@ -10,9 +10,10 @@
 #include <fstream>
 #include <random>
 
-constexpr auto ROW = 2160;
-constexpr auto COL = 3840;
+constexpr auto ROW = 1440;
+constexpr auto COL = 2560;
 constexpr auto DEPTH = 3;
+constexpr auto INITIAL = 0.01;
 constexpr auto MAX_SOURCE_SIZE = (0x1000000);
 constexpr auto NUM_WORK_GROUP = (21600);
 

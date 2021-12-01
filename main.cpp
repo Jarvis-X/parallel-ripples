@@ -12,6 +12,10 @@ int main(int argc, char** argv) {
     // two buffers: current buffer (before going through the current loop, it stores two time-step before), and one time-step before
     float* image_buffer = new float[COL * ROW * DEPTH]();
     float* image_buffer1 = new float[COL * ROW * DEPTH]();
+    for (size_t i = 0; i < COL * ROW * DEPTH; i++) {
+        image_buffer[i] = INITIAL;
+        image_buffer[i] = INITIAL;
+    }
     
     // rng for new raindrops
     uniform_int_distribution<int> pos_uni(0, COL * ROW);
@@ -76,20 +80,16 @@ int main(int argc, char** argv) {
         waitKey(1);
         
         // serial version
-        
         begin = chrono::high_resolution_clock::now();
         update_buffer(image_buffer, image_buffer1);
         end = chrono::high_resolution_clock::now();
         cout << "CALCULATION TIME = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "\n";
-        
 
         // OpenCL-parallelized version
-        /*
         begin = chrono::high_resolution_clock::now();
         update_buffer_cl(image_buffer, image_buffer1, global_size, local_size, context, queue, update_buffer_kernel, err);
         end = chrono::high_resolution_clock::now();
         cout << "CALCULATION TIME = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "\n";
-        */
     }
 
     return 0;

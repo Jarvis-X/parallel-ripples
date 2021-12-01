@@ -93,10 +93,10 @@ void update_buffer(float* &image_buffer, float* &image_buffer1) {
                 int west = (row * COL + col - 1)* DEPTH + channel;
                 int east = (row * COL + col + 1) * DEPTH + channel;
 
-                int northeast = (row - 1) * COL + col;
-                int southeast = (row + 1) * COL + col;
-                int northwest = row * COL + col - 1;
-                int southwest = row * COL + col + 1;
+                int northeast = ((row - 1) * COL + col + 1) * DEPTH + channel;
+                int southeast = ((row + 1) * COL + col + 1) * DEPTH + channel;
+                int northwest = ((row - 1) * COL + col - 1) * DEPTH + channel;
+                int southwest = ((row + 1) * COL + col - 1) * DEPTH + channel;
 
                 if (col == 0) {
                     // continue;
@@ -144,16 +144,21 @@ void update_buffer(float* &image_buffer, float* &image_buffer1) {
                 }
                 // in the belly
                 else {
-                    image_buffer[index] = (
-                        image_buffer1[north] +
-                        image_buffer1[south] +
-                        image_buffer1[east] +
-                        image_buffer1[west]) / 2.0 -
-                        image_buffer[index];
+					image_buffer[index] = 0.28 * (
+						image_buffer1[north] +
+						image_buffer1[south] +
+						image_buffer1[east] +
+						image_buffer1[west]) + 0.12 * (
+							image_buffer1[northeast] +
+							image_buffer1[southwest] +
+							image_buffer1[southeast] +
+							image_buffer1[northwest]) -
+						(image_buffer[index] - INITIAL);
                 }
 
                 // damping for 1/16
                 image_buffer[index] *= 0.9;
+				image_buffer[index] += INITIAL;
             }
         }
     }
@@ -168,7 +173,7 @@ void generate_raindrops(float*& image_buffer1,
     uniform_real_distribution<float> &amp_uni,
     default_random_engine &random_pos_eng,
     default_random_engine &random_amp_eng) {
-    for (auto i = 0; i < 100; i++) {
+    for (auto i = 0; i < 1; i++) {
         int index = pos_uni(random_pos_eng);
         for (auto channel = 0; channel < DEPTH; channel++) {
             float amp = amp_uni(random_amp_eng);

@@ -1,9 +1,10 @@
 // TODO: consider using local memory to optimize, ref:
 // https://developer.download.nvidia.com/CUDA/training/NVIDIA_GPU_Computing_Webinars_Best_Practises_For_OpenCL_Programming.pdf page 22
 // we can avoid the scenario where work groups keep accessing global memory which is slow
-#define ROW 2160
-#define COL 3840
+#define ROW 1440
+#define COL 2560
 #define DEPTH 3
+#define INITIAL 0.01
 
 __kernel void update_buffer(__global float* image_buffer, __global float* image_buffer1) {
     int index = get_global_id(0);
@@ -19,17 +20,11 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
         int east = (row * COL + col + 1) * DEPTH + channel;
         
         // printf("pixel (%i, %i) at channel %i has index %i\n", row, col, channel, index);
-        /*
-        int north = 1;
-        int south = 1;
-        int west = 1;
-        int east = 1;
-        */
         // to make the ripples rounder
-        int northeast = (row - 1) * COL + col;
-        int southeast = (row + 1) * COL + col;
-        int northwest = row * COL + col - 1;
-        int southwest = row * COL + col + 1;
+        int northeast = ((row - 1) * COL + col + 1) * DEPTH + channel;
+        int southeast = ((row + 1) * COL + col + 1) * DEPTH + channel;
+        int northwest = ((row - 1) * COL + col - 1) * DEPTH + channel;
+        int southwest = ((row + 1) * COL + col - 1) * DEPTH + channel;
         
         if (col == 0) {
             // continue;
@@ -77,16 +72,21 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
         }
         // in the belly
         else {
-            image_buffer[index] = (
+            image_buffer[index] = 0.28 * (
                 image_buffer1[north] +
                 image_buffer1[south] +
                 image_buffer1[east] +
-                image_buffer1[west]) / 2.0 -
-                image_buffer[index];
+                image_buffer1[west]) + 0.12 * (
+                    image_buffer1[northeast] +
+                    image_buffer1[southwest] +
+                    image_buffer1[southeast] +
+                    image_buffer1[northwest]) -
+                (image_buffer[index] - INITIAL);
         }
         
         // printf("ROW %i; COL %i; DEPTH %i, index %d\n", ROW, COL, DEPTH, (row * COL + col) * DEPTH + channel);
         // damping for 1/16
-        image_buffer[(row * COL + col) * DEPTH + channel] *= 0.9;
+        image_buffer[index] *= 0.9;
+        image_buffer[index] += INITIAL;
     }
 }
