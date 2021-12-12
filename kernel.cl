@@ -1,13 +1,15 @@
 // TODO: consider using local memory to optimize, ref:
 // https://developer.download.nvidia.com/CUDA/training/NVIDIA_GPU_Computing_Webinars_Best_Practises_For_OpenCL_Programming.pdf page 22
 // we can avoid the scenario where work groups keep accessing global memory which is slow
-#define ROW 1440
-#define COL 2560
+#define ROW 2160
+#define COL 3840
 #define DEPTH 3
 #define INITIAL 0.01
 
 __kernel void update_buffer(__global float* image_buffer, __global float* image_buffer1) {
+    // local float image_cache[3][COL / 20 + 2][3];
     int index = get_global_id(0);
+  
     if (index < ROW * COL * DEPTH) {
         int channel = index % DEPTH;
         int pixel_index = index / DEPTH;
@@ -27,7 +29,6 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
         int southwest = ((row + 1) * COL + col - 1) * DEPTH + channel;
         
         if (col == 0) {
-            // continue;
             // top left
             if (row == 0) {
                 image_buffer[index] = (image_buffer1[south] + image_buffer1[east]) / 2 - image_buffer[index];
@@ -43,7 +44,6 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
             }
         }
         else if (col == COL - 1) {
-            // continue;
             // top right
             if (row == 0) {
                 image_buffer[index] = (image_buffer1[south] + image_buffer1[west]) / 2 - image_buffer[index];
@@ -60,13 +60,11 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
         }
         // on the ceiling
         else if (row == 0) {
-            // continue;
             image_buffer[index] = (image_buffer1[south] + image_buffer1[west] + image_buffer1[east]) / 2
                 - image_buffer[index];
         }
         // on the floor
         else if (row == ROW - 1) {
-            // continue;
             image_buffer[index] = (image_buffer1[north] + image_buffer1[west] + image_buffer1[east]) / 2
                 - image_buffer[index];
         }
@@ -76,7 +74,7 @@ __kernel void update_buffer(__global float* image_buffer, __global float* image_
                 image_buffer1[north] +
                 image_buffer1[south] +
                 image_buffer1[east] +
-                image_buffer1[west]) + 0.12 * (
+                image_buffer1[west]) + 0.13 * (
                     image_buffer1[northeast] +
                     image_buffer1[southwest] +
                     image_buffer1[southeast] +
