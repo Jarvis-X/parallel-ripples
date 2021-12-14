@@ -10,7 +10,12 @@ More specifically, tell the MSVS comipler where to find the header files and the
 * A Device (preferrably GPU) that supports OpenCL 1.2 or up
 * Or, if the developer prefers, one can compile the project with any compiler that supports C++11 or higher using the header file and the cpp files from this repository
 on a machine where OpenCV and OpenCL are installed.
+
 ### The ripple algorithm
 * We improved the algorithm provided by https://github.com/CodingTrain/website/blob/main/CodingChallenges/CC_102_WaterRipples/Processing/CC_102_WaterRipples/CC_102_WaterRipples.pde such that:
   * At every pixel, the water level is collectively obtained from more surrounding pixels, making the ripples more accurate and rounder
   * The program runs faster by using OpenCL parallelism
+
+### Further optimization
+* See what is wrong with my trials of using local cache on the device. It does not give me a performance boost nor work at all.
+* See how can we schedule the render and updating phases to parallelize. As the resolution increases, the render time goes up a lot.
