@@ -17,5 +17,5 @@ on a machine where OpenCV and OpenCL are installed.
   * The program runs faster by using OpenCL parallelism
 
 ### Further optimization
-* See what is wrong with my trials of using local cache on the device. It does not give me a performance boost nor work at all.
-* See how can we schedule the render and updating phases to parallelize. As the resolution increases, the render time goes up a lot.
+* See what is wrong with my trials of using local cache on the device. It does not give me a performance boost nor work at all. Massive comment sections in the kernel file are from this failure.
+* We schedule the frame update calls and the screen render calls in parallel, so in theory, the time it takes to show a frame is cut to the maximum amount of time between updating and imshow the frame.
